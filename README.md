@@ -17,6 +17,7 @@ The default setup uses local providers where possible:
 - Pronunciation scoring based on recognized English text
 - Local Ollama support for private LLM inference
 - Local faster-whisper support for speech-to-text
+- Server-side text-to-speech with edge-tts (natural neural voices), with OpenAI TTS and browser speech synthesis as alternatives
 - Optional OpenAI and Anthropic provider support
 
 ## Safety
@@ -61,7 +62,18 @@ LLM_PROVIDER=ollama
 OLLAMA_MODEL=gemma2:latest
 STT_PROVIDER=faster_whisper
 FASTER_WHISPER_MODEL=base.en
+TTS_PROVIDER=edge
+EDGE_TTS_VOICE=en-US-JennyNeural
+EDGE_TTS_RATE=-10%
 ```
+
+Text-to-speech options for `TTS_PROVIDER`:
+
+- `edge` (default): server-side neural voices via edge-tts
+- `openai`: OpenAI TTS (requires `OPENAI_API_KEY`)
+- `browser`: client-side Web Speech API only
+
+If server-side TTS is unavailable, the UI automatically falls back to the browser's built-in speech synthesis.
 
 Optional cloud configuration:
 

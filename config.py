@@ -51,6 +51,13 @@ OPENAI_TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy")
 OPENAI_WHISPER_MODEL = os.getenv("OPENAI_WHISPER_MODEL", "whisper-1")
 OPENAI_TRANSCRIPTION_LANGUAGE = os.getenv("OPENAI_TRANSCRIPTION_LANGUAGE", "en")
 
+# --- 音声合成（TTS）設定 ---
+TTS_PROVIDER = os.getenv("TTS_PROVIDER", "edge")  # "edge" / "openai" / "browser"
+
+# --- edge-tts設定（無料のMicrosoft Edge TTS） ---
+EDGE_TTS_VOICE = os.getenv("EDGE_TTS_VOICE", "en-US-JennyNeural")
+EDGE_TTS_RATE = os.getenv("EDGE_TTS_RATE", "-10%")  # 学習者向けに少しゆっくり
+
 # --- 音声認識設定 ---
 STT_PROVIDER = os.getenv("STT_PROVIDER", "faster_whisper")  # "faster_whisper" / "openai" / "disabled"
 

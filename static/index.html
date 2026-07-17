@@ -301,9 +301,289 @@
         }
         .send-btn:disabled { opacity: .4; cursor: not-allowed; }
 
+        /* ===== Stats dashboard (弱点ダッシュボード) ===== */
+        .stats-overlay {
+            position: fixed; inset: 0;
+            background: rgba(74,55,40,.45);
+            z-index: 300;
+            display: none;
+            align-items: flex-end; justify-content: center;
+        }
+        .stats-overlay.open { display: flex; }
+        .stats-panel {
+            background: var(--bg);
+            width: 100%; max-width: 680px;
+            max-height: 88dvh;
+            border-radius: 24px 24px 0 0;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: slideUp .25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0 }
+            to { transform: translateY(0); opacity: 1 }
+        }
+        .stats-header {
+            background: linear-gradient(135deg, #FBBF24, #F59E0B, #FB923C);
+            color: white;
+            padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .stats-header h2 { font-size: 16px; font-weight: 700; }
+        .stats-body {
+            overflow-y: auto;
+            padding: 16px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .stats-summary { display: flex; gap: 10px; }
+        .stats-card {
+            flex: 1;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        .stats-card .num { font-size: 22px; font-weight: 800; color: var(--primary-dark); }
+        .stats-card .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .stats-section {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(210,180,130,0.15);
+        }
+        .stats-section-title {
+            font-size: 12px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .5px;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+        }
+        .stats-empty {
+            font-size: 13px; color: var(--text-secondary);
+            text-align: center; padding: 8px 0;
+        }
+        /* エラー種別の横棒グラフ（CSSのみ） */
+        .error-bar-row { margin-bottom: 12px; cursor: pointer; }
+        .error-bar-row:last-child { margin-bottom: 0; }
+        .error-bar-top {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 13px; margin-bottom: 4px;
+        }
+        .error-bar-name { font-weight: 600; }
+        .error-bar-name .en {
+            font-size: 10px; font-weight: 500;
+            color: var(--text-secondary); margin-left: 5px;
+        }
+        .error-bar-count { font-weight: 700; color: var(--primary-dark); }
+        .error-bar-track {
+            height: 14px;
+            background: #FFF3DA;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+        .error-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FCD34D, #F59E0B);
+            border-radius: 7px;
+            transition: width .4s ease;
+        }
+        /* タップで開閉する例文リスト */
+        .error-examples {
+            display: none;
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: #FFF9EB;
+            border: 1px solid #FDECC8;
+            border-radius: 12px;
+        }
+        .error-bar-row.open .error-examples { display: block; }
+        .error-example { font-size: 13px; line-height: 1.6; margin-bottom: 8px; }
+        .error-example:last-child { margin-bottom: 0; }
+        .error-hint {
+            font-size: 10px; color: var(--text-secondary);
+            text-align: right; margin-top: 2px;
+        }
+        /* 発音スコア推移（CSSバー） */
+        .score-trend {
+            display: flex; align-items: flex-end; gap: 4px;
+            height: 76px; padding-top: 4px;
+        }
+        .score-trend-bar {
+            flex: 1; min-width: 5px;
+            border-radius: 4px 4px 0 0;
+        }
+        .score-trend-labels {
+            display: flex; justify-content: space-between;
+            font-size: 10px; color: var(--text-secondary);
+            margin-top: 6px;
+        }
+        .trend-high { background: linear-gradient(180deg, #34D399, #10B981); }
+        .trend-mid { background: linear-gradient(180deg, #FCD34D, #F59E0B); }
+        .trend-low { background: linear-gradient(180deg, #FCA5A5, #FB7185); }
+
+        /* ===== Review mode (復習モード・簡易SRS) ===== */
+        .review-count-badge {
+            background: rgba(255,255,255,0.3);
+            border-radius: 20px; padding: 4px 12px;
+            font-size: 12px; font-weight: 700; color: white;
+        }
+        .review-prompt {
+            font-size: 12px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .5px;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+        .review-question-text {
+            font-size: 18px; font-weight: 700;
+            margin-bottom: 6px; line-height: 1.5;
+        }
+        .review-context {
+            font-size: 12px; color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .review-input-row { display: flex; gap: 8px; margin-top: 14px; }
+        .review-input {
+            flex: 1; min-width: 0;
+            padding: 12px 16px;
+            border: 2px solid var(--border); border-radius: 24px;
+            font-size: 15px; outline: none; font-family: inherit;
+            transition: border-color .2s;
+        }
+        .review-input:focus { border-color: var(--primary); }
+        .review-input:disabled { background: #FFF9EB; color: var(--text-secondary); }
+        .review-send-btn {
+            border: none; border-radius: 24px; padding: 0 20px;
+            background: linear-gradient(135deg, #34D399, #10B981);
+            color: white; font-size: 14px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 3px 10px rgba(52,211,153,.3);
+            transition: all .2s; flex-shrink: 0;
+        }
+        .review-send-btn:active { transform: scale(.96); }
+        .review-send-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .review-feedback {
+            border-radius: 16px; padding: 14px 16px; margin-top: 12px;
+            font-size: 14px; line-height: 1.7;
+            animation: fadeIn .25s ease;
+        }
+        .review-feedback.good {
+            background: #F0FFF4; border: 1.5px solid #C6F6D5; color: #059669;
+        }
+        .review-feedback.bad {
+            background: #FFF5F5; border: 1.5px solid #FECDD3; color: #E11D48;
+        }
+        .review-feedback .fb-title { font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+        .review-feedback .fb-answer { color: var(--text); }
+        .review-feedback .fb-explain { font-size: 12px; color: #78716C; margin-top: 4px; }
+        .review-next-btn {
+            width: 100%; margin-top: 12px;
+            border: none; border-radius: 24px; padding: 12px;
+            background: linear-gradient(135deg, #FBBF24, #F59E0B);
+            color: white; font-size: 15px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 3px 10px rgba(251,191,36,.4);
+            transition: all .2s;
+        }
+        .review-next-btn:active { transform: scale(.98); }
+        .review-done { text-align: center; padding: 28px 16px; color: var(--text); }
+        .review-done h3 { font-size: 18px; margin: 10px 0 8px; }
+        .review-done p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+        /* ===== Session summary (今日の学びレポート) ===== */
+        .summary-score-wrap {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .summary-score-circle {
+            width: 84px; height: 84px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 800; color: white;
+            flex-shrink: 0;
+        }
+        .summary-score-detail {
+            font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+        }
+        .summary-score-detail b { color: var(--text); }
+        /* エラー種別チップ */
+        .summary-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .summary-chip {
+            background: #FFF3DA;
+            border: 1px solid #FDECC8;
+            color: var(--primary-dark);
+            border-radius: 14px;
+            padding: 4px 12px;
+            font-size: 12px; font-weight: 600;
+        }
+        .summary-chip .cnt { font-weight: 800; margin-left: 4px; }
+        /* 学んだ表現リスト */
+        .summary-expression {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 14px; line-height: 1.6;
+        }
+        .summary-expression:last-child { border-bottom: none; }
+        .summary-expression .txt { flex: 1; }
+        .summary-play-btn {
+            border: none; border-radius: 16px;
+            background: linear-gradient(135deg, #FBBF24, #F59E0B);
+            color: white; cursor: pointer;
+            padding: 5px 10px; font-size: 11px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 4px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(251,191,36,.3);
+        }
+        .summary-play-btn:active { transform: scale(.95); }
+        /* LLM講評 */
+        .summary-feedback-item {
+            font-size: 14px; line-height: 1.7; margin-bottom: 6px;
+            padding-left: 18px; position: relative;
+        }
+        .summary-feedback-item::before {
+            content: ''; position: absolute; left: 2px; top: 9px;
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--primary-light);
+        }
+        .summary-phrase {
+            background: #FFF9EB;
+            border: 1px solid #FDECC8;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 15px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .summary-phrase .txt { flex: 1; }
+        .summary-message {
+            font-size: 13px; color: var(--primary);
+            font-style: italic; line-height: 1.7;
+        }
+
+        /* ===== Toast (小さな通知・alert代替) ===== */
+        .toast {
+            position: fixed;
+            left: 50%; bottom: 120px;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(74,55,40,.92);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px; font-weight: 600;
+            z-index: 400;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease, transform .25s ease;
+            max-width: 86vw; text-align: center;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         @media (min-width:640px) {
             .chat-container { max-width: 680px; margin: 0 auto; width: 100%; }
             .input-area > * { max-width: 680px; margin: 0 auto; }
+            .stats-overlay { align-items: center; }
+            .stats-panel { border-radius: 24px; max-height: 82dvh; }
         }
     </style>
 </head>
@@ -318,12 +598,54 @@
         </div>
     </div>
     <div class="header-right">
+        <button class="header-btn" onclick="openReview()">Review</button>
+        <button class="header-btn" onclick="openStats()">Stats</button>
         <button class="header-btn" id="listeningModeBtn" onclick="toggleListeningMode()">
             Listening Mode
         </button>
+        <button class="header-btn" onclick="openSummary()">Finish</button>
         <button class="header-btn" onclick="resetConversation()">Reset</button>
     </div>
 </div>
+
+<!-- ===== 弱点ダッシュボード（オーバーレイ） ===== -->
+<div class="stats-overlay" id="statsOverlay" onclick="if(event.target===this)closeStats()">
+    <div class="stats-panel">
+        <div class="stats-header">
+            <h2>Weakness Dashboard</h2>
+            <button class="header-btn" onclick="closeStats()">Close</button>
+        </div>
+        <div class="stats-body" id="statsBody"></div>
+    </div>
+</div>
+
+<!-- ===== 復習モード（オーバーレイ・Statsと同じボトムシート型） ===== -->
+<div class="stats-overlay" id="reviewOverlay" onclick="if(event.target===this)closeReview()">
+    <div class="stats-panel">
+        <div class="stats-header">
+            <h2>Review</h2>
+            <div style="display:flex;align-items:center;gap:8px">
+                <span class="review-count-badge" id="reviewCountBadge" style="display:none"></span>
+                <button class="header-btn" onclick="closeReview()">Close</button>
+            </div>
+        </div>
+        <div class="stats-body" id="reviewBody"></div>
+    </div>
+</div>
+
+<!-- ===== セッションサマリ「今日の学び」レポート（オーバーレイ） ===== -->
+<div class="stats-overlay" id="summaryOverlay" onclick="if(event.target===this)closeSummary()">
+    <div class="stats-panel">
+        <div class="stats-header">
+            <h2>Today's Report</h2>
+            <button class="header-btn" onclick="closeSummary()">Close</button>
+        </div>
+        <div class="stats-body" id="summaryBody"></div>
+    </div>
+</div>
+
+<!-- 小さな通知トースト（alert代替） -->
+<div class="toast" id="toast"></div>
 
 <div class="chat-container" id="chatContainer">
     <div class="welcome" id="welcome">
@@ -587,10 +909,13 @@ async function transcribeAndSend(blob) {
         const text = (data.text || '').trim();
         if (!text) throw new Error('No speech detected. Try again.');
 
+        // 単語別の認識確率（faster-whisper使用時のみ入る）を保持してチャットへ渡す
+        const words = Array.isArray(data.words) ? data.words : [];
+
         const recordingUrl = lastRecordingUrl;
         lastRecordingUrl = null;
         setRecognitionPreview(text, true);
-        await submitTurn(text, 0, recordingUrl);
+        await submitTurn(text, 0, recordingUrl, words);
         setRecognitionPreview('', false);
     } catch (err) {
         console.error('Transcription failed:', err);
@@ -602,7 +927,7 @@ async function transcribeAndSend(blob) {
     }
 }
 
-async function submitTurn(text, confidence = 0, recordingUrl = null) {
+async function submitTurn(text, confidence = 0, recordingUrl = null, words = []) {
     if (isProcessing) return;
     isProcessing = true;
     const welcome = document.getElementById('welcome');
@@ -614,7 +939,7 @@ async function submitTurn(text, confidence = 0, recordingUrl = null) {
         const resp = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, session_id: sessionId, confidence })
+            body: JSON.stringify({ text, session_id: sessionId, confidence, words })
         });
         if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -645,14 +970,27 @@ function renderTurn(userText, data, recordingUrl) {
     html += `<div class="user-text">${esc(userText)}</div>`;
 
     // IPA: correct pronunciation guide
+    // 単語別スコアがあれば good/fair/poor で色分け、無ければ従来表示
+    const wordScores = data.pronunciation_score && data.pronunciation_score.word_scores;
     if (data.user_ipa && data.user_ipa.length > 0) {
-        html += renderIPARow('Correct Pronunciation (IPA)', data.user_ipa, 'correct');
+        if (wordScores && wordScores.length > 0) {
+            html += renderIPAScoredRow('Your Pronunciation (IPA)', data.user_ipa, wordScores);
+        } else {
+            html += renderIPARow('Correct Pronunciation (IPA)', data.user_ipa, 'correct');
+        }
     }
 
     // Score
     if (data.pronunciation_score) {
         const s = data.pronunciation_score.overall_score;
         const cls = s >= 85 ? 'score-high' : s >= 70 ? 'score-mid' : 'score-low';
+        // スコア算出方法の説明（acoustic: 音響ベース / text_only: テキストのみ）
+        const method = data.pronunciation_score.method;
+        const methodLabel = method === 'acoustic'
+            ? 'acoustic: 音響ベース評価（単語ごとの認識確率から算出）'
+            : method === 'text_only'
+                ? 'text_only: テキストのみの簡易評価'
+                : '';
         html += `<div class="score-row">
             <div class="score-circle ${cls}">${s}</div>
             <div class="score-detail">
@@ -660,6 +998,7 @@ function renderTurn(userText, data, recordingUrl) {
                 ${data.pronunciation_score.word_count || 0} words recognized
                 ${data.pronunciation_score.recognition_confidence
                     ? ` / Recognition confidence: ${data.pronunciation_score.recognition_confidence}%` : ''}
+                ${methodLabel ? `<br><span style="font-size:10px;opacity:.8">${methodLabel}</span>` : ''}
             </div>
         </div>`;
     }
@@ -761,6 +1100,48 @@ function renderIPARow(label, ipaData, style) {
     </div>`;
 }
 
+// 単語別スコアのレベルをIPA表示用のCSSクラスへ変換
+function levelToIpaClass(level) {
+    if (level === 'good') return 'ipa-correct';
+    if (level === 'poor') return 'ipa-wrong';
+    return 'ipa-neutral';  // fair・不明はニュートラル表示
+}
+
+// 単語別スコア（word_scores）つきのIPA行を描画する
+// user_ipaの単語列とword_scoresの単語列を正規化して順番にマッチングする
+function renderIPAScoredRow(label, ipaData, wordScores) {
+    const norm = s => (s || '').toLowerCase().replace(/[^a-z']/g, '');
+    let cursor = 0;
+
+    const words = ipaData
+        .filter(w => w.word && !/^[.,!?;:]$/.test(w.word))
+        .map(w => {
+            let cls = 'ipa-neutral';
+            let titleAttr = '';
+            const target = norm(w.word);
+            // cursor以降で同じ単語を探す（挿入・欠落ずれに耐えるゆるいマッチ）
+            let found = -1;
+            for (let i = cursor; i < wordScores.length; i++) {
+                if (norm(wordScores[i].word) === target) { found = i; break; }
+            }
+            if (found >= 0) {
+                const ws = wordScores[found];
+                cls = levelToIpaClass(ws.level);
+                titleAttr = ` title="score: ${ws.score} (${esc(ws.level)})"`;
+                cursor = found + 1;
+            }
+            return `<span class="ipa-unit"${titleAttr}>
+                <span class="word ${cls === 'ipa-wrong' ? 'ipa-wrong' : ''}">${esc(w.word)}</span><br>
+                <span class="ipa ${cls}">${w.ipa ? '/'+esc(w.ipa)+'/' : '-'}</span>
+            </span>`;
+        }).join('');
+
+    return `<div class="ipa-row">
+        <div class="ipa-row-label">${esc(label)}</div>
+        <div class="ipa-words">${words}</div>
+    </div>`;
+}
+
 function renderIPACompare(label, ipaData, score) {
     // Highlight IPA — lower score words get marked as needing improvement
     const s = score ? score.overall_score : 80;
@@ -813,7 +1194,70 @@ function scrollToBottom() {
 // ============================================================
 // TTS
 // ============================================================
+// サーバーTTSの再生管理（連打時は直前の再生を止める）
+let ttsAudio = null;          // 再生中のAudioオブジェクト
+let ttsAvailable = true;      // サーバーTTSが使えない(503等)と分かったらfalseにして以降スキップ
+let ttsRequestId = 0;         // 古いfetch結果の再生を防ぐ世代カウンター
+
+function stopSpeaking() {
+    // サーバーTTS・ブラウザTTSの両方を停止する
+    if (ttsAudio) {
+        ttsAudio.pause();
+        if (ttsAudio.dataset && ttsAudio.dataset.objectUrl) {
+            URL.revokeObjectURL(ttsAudio.dataset.objectUrl);
+        }
+        ttsAudio = null;
+    }
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
 function speak(text) {
+    // 既存の呼び出し箇所(onclick)を変えないため、シグネチャは speak(text) のまま非同期処理を内包する
+    stopSpeaking();
+    const myId = ++ttsRequestId;
+
+    if (!ttsAvailable) {
+        speakWithBrowser(text);
+        return;
+    }
+
+    fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    }).then(res => {
+        if (!res.ok) {
+            // 503 = サーバーTTS無効/未設定 → 以降はブラウザTTSに切り替え
+            if (res.status === 503) ttsAvailable = false;
+            throw new Error('tts unavailable');
+        }
+        return res.blob();
+    }).then(blob => {
+        // 待っている間に新しい再生が始まっていたら破棄
+        if (myId !== ttsRequestId) return;
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.dataset.objectUrl = url;
+        // 再生終了・エラー時にObjectURLを解放（メモリリーク防止）
+        const cleanup = () => {
+            URL.revokeObjectURL(url);
+            if (ttsAudio === audio) ttsAudio = null;
+        };
+        audio.addEventListener('ended', cleanup);
+        audio.addEventListener('error', cleanup);
+        ttsAudio = audio;
+        audio.play().catch(() => {
+            cleanup();
+            if (myId === ttsRequestId) speakWithBrowser(text);
+        });
+    }).catch(() => {
+        // サーバーTTS失敗時はWeb Speech APIにフォールバック
+        if (myId === ttsRequestId) speakWithBrowser(text);
+    });
+}
+
+// 従来のWeb Speech APIによる読み上げ（フォールバック用）
+function speakWithBrowser(text) {
     if (!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -836,6 +1280,420 @@ function playRecording(turnId) {
         audio.currentTime = 0;
         audio.play();
     }
+}
+
+// ============================================================
+// Weakness Dashboard (弱点ダッシュボード)
+// ============================================================
+// エラー種別の表示ラベル（日本語 + 英語）
+const ERROR_TYPE_LABELS = {
+    tense:        { ja: '時制',           en: 'tense' },
+    article:      { ja: '冠詞',           en: 'article' },
+    preposition:  { ja: '前置詞',         en: 'preposition' },
+    word_order:   { ja: '語順',           en: 'word order' },
+    subject_verb: { ja: '主語と動詞の一致', en: 'subject-verb' },
+    plural:       { ja: '単数・複数',      en: 'plural' },
+    vocabulary:   { ja: '語彙選択',        en: 'vocabulary' },
+    spelling:     { ja: 'スペル',          en: 'spelling' },
+    other:        { ja: 'その他',          en: 'other' },
+};
+
+async function openStats() {
+    const overlay = document.getElementById('statsOverlay');
+    const body = document.getElementById('statsBody');
+    overlay.classList.add('open');
+    body.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+    try {
+        const resp = await fetch('/api/stats');
+        if (!resp.ok) throw new Error('Failed to load stats');
+        const data = await resp.json();
+        renderStats(data);
+    } catch (e) {
+        body.innerHTML = `<div class="stats-empty">${esc(e.message || 'Failed to load stats')}</div>`;
+    }
+}
+
+function closeStats() {
+    document.getElementById('statsOverlay').classList.remove('open');
+}
+
+// 例文リストの開閉（バーの行をタップ）
+function toggleErrorExamples(el) {
+    el.classList.toggle('open');
+}
+
+function renderStats(data) {
+    const body = document.getElementById('statsBody');
+    let html = '';
+
+    // ---- 1. サマリーカード ----
+    html += `<div class="stats-summary">
+        <div class="stats-card">
+            <div class="num">${data.total_turns ?? 0}</div>
+            <div class="lbl">Turns</div>
+        </div>
+        <div class="stats-card">
+            <div class="num">${data.total_corrections ?? 0}</div>
+            <div class="lbl">Corrections</div>
+        </div>
+        <div class="stats-card">
+            <div class="num">${data.avg_score != null ? data.avg_score : '-'}</div>
+            <div class="lbl">Avg Score</div>
+        </div>
+    </div>`;
+
+    // ---- 2. エラー種別の横棒グラフ（多い順・タップで例文展開） ----
+    html += `<div class="stats-section">`;
+    html += `<div class="stats-section-title">Error Types</div>`;
+    const stats = data.error_stats || [];
+    if (stats.length === 0) {
+        html += `<div class="stats-empty">まだ添削データがありません。会話を始めましょう！</div>`;
+    } else {
+        const maxCount = Math.max(...stats.map(s => s.count), 1);
+        stats.forEach(s => {
+            const label = ERROR_TYPE_LABELS[s.error_type] || { ja: s.error_type, en: '' };
+            const width = Math.max(4, Math.round(s.count / maxCount * 100));
+            let examplesHtml = '';
+            (s.examples || []).forEach(ex => {
+                examplesHtml += `<div class="error-example">
+                    <span class="c-original">${esc(ex.original || '')}</span>
+                    <span class="c-arrow">&rarr;</span>
+                    <span class="c-fixed">${esc(ex.corrected || '')}</span>
+                    ${ex.explanation ? `<span class="c-explain">${esc(ex.explanation)}</span>` : ''}
+                </div>`;
+            });
+            html += `<div class="error-bar-row" onclick="toggleErrorExamples(this)">
+                <div class="error-bar-top">
+                    <span class="error-bar-name">${esc(label.ja)}<span class="en">${esc(label.en)}</span></span>
+                    <span class="error-bar-count">${s.count}</span>
+                </div>
+                <div class="error-bar-track">
+                    <div class="error-bar-fill" style="width:${width}%"></div>
+                </div>
+                ${examplesHtml ? `<div class="error-examples">${examplesHtml}</div><div class="error-hint">tap to show examples</div>` : ''}
+            </div>`;
+        });
+    }
+    html += `</div>`;
+
+    // ---- 3. 発音スコア推移（CSSバー・古い順→新しい順） ----
+    html += `<div class="stats-section">`;
+    html += `<div class="stats-section-title">Pronunciation Score Trend</div>`;
+    const scores = data.recent_scores || [];
+    if (scores.length === 0) {
+        html += `<div class="stats-empty">まだスコアデータがありません。</div>`;
+    } else {
+        html += `<div class="score-trend">`;
+        scores.forEach(s => {
+            const cls = s >= 85 ? 'trend-high' : s >= 70 ? 'trend-mid' : 'trend-low';
+            const h = Math.max(6, Math.round(s / 100 * 72));
+            html += `<div class="score-trend-bar ${cls}" style="height:${h}px" title="${s}"></div>`;
+        });
+        html += `</div>`;
+        html += `<div class="score-trend-labels">
+            <span>old</span>
+            <span>latest: ${scores[scores.length - 1]}</span>
+        </div>`;
+    }
+    html += `</div>`;
+
+    body.innerHTML = html;
+}
+
+// ============================================================
+// Review mode (復習モード・簡易SRS)
+// ============================================================
+let reviewQueue = [];    // 今回の復習キュー（/api/review/due の結果）
+let reviewIndex = 0;     // 現在の出題位置
+let reviewBusy = false;  // 解答送信中の二重送信防止
+
+async function openReview() {
+    const overlay = document.getElementById('reviewOverlay');
+    const body = document.getElementById('reviewBody');
+    overlay.classList.add('open');
+    updateReviewBadge(null);
+    body.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+    try {
+        const resp = await fetch('/api/review/due?limit=10');
+        if (!resp.ok) throw new Error('Failed to load reviews');
+        const data = await resp.json();
+        reviewQueue = data.reviews || [];
+        reviewIndex = 0;
+        renderReviewQuestion();
+    } catch (e) {
+        body.innerHTML = `<div class="stats-empty">${esc(e.message || 'Failed to load reviews')}</div>`;
+    }
+}
+
+function closeReview() {
+    document.getElementById('reviewOverlay').classList.remove('open');
+    stopSpeaking();
+}
+
+// ヘッダーの残り問題数バッジを更新（0以下や未取得時は非表示）
+function updateReviewBadge(remaining) {
+    const badge = document.getElementById('reviewCountBadge');
+    if (remaining == null || remaining <= 0) {
+        badge.style.display = 'none';
+        return;
+    }
+    badge.style.display = 'inline-block';
+    badge.textContent = `残り ${remaining} 問`;
+}
+
+function renderReviewQuestion() {
+    const body = document.getElementById('reviewBody');
+    const remaining = reviewQueue.length - reviewIndex;
+    updateReviewBadge(remaining);
+
+    // キューが空（最初から無い or 使い切った）→ 完了表示
+    if (remaining <= 0) {
+        body.innerHTML = `<div class="stats-section"><div class="review-done">
+            <img src="/static/bee.svg" alt="" style="width:52px;height:52px">
+            <h3>今日の復習は完了!</h3>
+            <p>${reviewQueue.length > 0
+                ? `${reviewQueue.length}問おつかれさま。<br>また会話をして表現をためよう。`
+                : '復習する間違いはありません。<br>会話をすると添削がここにたまります。'}</p>
+        </div></div>`;
+        return;
+    }
+
+    const q = reviewQueue[reviewIndex];
+    const label = ERROR_TYPE_LABELS[q.error_type];
+    let html = `<div class="stats-section">`;
+    html += `<div class="review-prompt">この文を直して言ってみよう</div>`;
+    html += `<div class="review-question-text"><span class="c-original">${esc(q.original || '')}</span></div>`;
+    if (q.user_text) {
+        // 文脈として元の発話全体を小さく表示
+        html += `<div class="review-context">元の発話: ${esc(q.user_text)}</div>`;
+    }
+    if (label) {
+        html += `<div class="review-context">種別: ${esc(label.ja)} (${esc(label.en)})${q.review_count > 0 ? ` / これまで${q.review_count}回復習` : ''}</div>`;
+    }
+    html += `<div class="review-input-row">
+        <input type="text" class="review-input" id="reviewInput"
+               placeholder="正しい英文を入力..." autocomplete="off"
+               onkeydown="if(event.key==='Enter')submitReviewAnswer()">
+        <button class="review-send-btn" id="reviewSendBtn" onclick="submitReviewAnswer()">送信</button>
+    </div>`;
+    html += `<div id="reviewFeedback"></div>`;
+    html += `</div>`;
+    body.innerHTML = html;
+    setTimeout(() => {
+        const input = document.getElementById('reviewInput');
+        if (input) input.focus();
+    }, 100);
+}
+
+async function submitReviewAnswer() {
+    if (reviewBusy) return;
+    const q = reviewQueue[reviewIndex];
+    const input = document.getElementById('reviewInput');
+    const submitBtn = document.getElementById('reviewSendBtn');
+    const answer = input ? input.value.trim() : '';
+    if (!q || !answer) return;
+
+    reviewBusy = true;
+    submitBtn.disabled = true;
+    try {
+        const resp = await fetch('/api/review/answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correction_id: q.id, answer_text: answer })
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || '判定に失敗しました');
+        }
+        const result = await resp.json();
+        input.disabled = true;  // 解答確定後は再入力させない
+        renderReviewFeedback(result);
+    } catch (e) {
+        submitBtn.disabled = false;
+        document.getElementById('reviewFeedback').innerHTML =
+            `<div class="review-feedback bad">${esc(e.message || 'Error')}</div>`;
+    } finally {
+        reviewBusy = false;
+    }
+}
+
+function renderReviewFeedback(result) {
+    const fb = document.getElementById('reviewFeedback');
+    const isLast = reviewIndex >= reviewQueue.length - 1;
+    let html = '';
+    if (result.correct) {
+        // 正解: 緑のフィードバック + 次回間隔の案内
+        const days = result.srs ? result.srs.interval_days : null;
+        html += `<div class="review-feedback good">
+            <div class="fb-title">正解!</div>
+            <div class="fb-answer">${esc(result.corrected || '')}</div>
+            ${days ? `次の復習は${days}日後だよ。` : ''}
+        </div>`;
+    } else {
+        // 不正解（惜しい場合はメッセージを変える）: 赤 + 正答 + 説明 + 再生ボタン
+        html += `<div class="review-feedback bad">
+            <div class="fb-title">${result.close ? '惜しい! あと少し' : '不正解'}</div>
+            <div class="fb-answer">正解: <span class="c-fixed">${esc(result.corrected || '')}</span></div>
+            ${result.explanation ? `<div class="fb-explain">${esc(result.explanation)}</div>` : ''}
+            <button class="play-btn" style="margin-top:8px" onclick="speak('${escAttr(result.corrected || '')}')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                正答を聞く
+            </button>
+        </div>`;
+    }
+    html += `<button class="review-next-btn" onclick="nextReview()">${isLast ? '完了' : '次へ'}</button>`;
+    fb.innerHTML = html;
+}
+
+function nextReview() {
+    stopSpeaking();
+    reviewIndex++;
+    renderReviewQuestion();
+}
+
+// ============================================================
+// Session summary (今日の学びレポート)
+// ============================================================
+let toastTimer = null;
+
+// alert代替の小さなトースト表示
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// Finishボタン: サマリを取得してレポートを表示する
+async function openSummary() {
+    if (isProcessing || isTranscribing) return;
+    const overlay = document.getElementById('summaryOverlay');
+    const body = document.getElementById('summaryBody');
+    overlay.classList.add('open');
+    body.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>'
+        + '<div class="stats-empty">レポートを作成中...</div>';
+    try {
+        const resp = await fetch(`/api/summary/${encodeURIComponent(sessionId)}`);
+        if (resp.status === 404) {
+            // ターンが無いセッション: オーバーレイを閉じてトーストだけ出す
+            overlay.classList.remove('open');
+            showToast('まだ会話がありません');
+            return;
+        }
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'Failed to load report');
+        }
+        const data = await resp.json();
+        renderSummary(data);
+    } catch (e) {
+        body.innerHTML = `<div class="stats-empty">${esc(e.message || 'レポートの取得に失敗しました')}</div>`;
+    }
+}
+
+// レポートを閉じると新しいセッションを開始する
+function closeSummary() {
+    document.getElementById('summaryOverlay').classList.remove('open');
+    stopSpeaking();
+    resetConversation();
+}
+
+function renderSummary(data) {
+    const body = document.getElementById('summaryBody');
+    const st = data.stats || {};
+    const fb = data.feedback;
+    let html = '';
+
+    // ---- 1. スコアサマリ（平均を大きなサークル、最高/最低は文字） ----
+    const avg = st.avg_score;
+    const circleCls = avg == null ? 'score-mid' : avg >= 85 ? 'score-high' : avg >= 70 ? 'score-mid' : 'score-low';
+    html += `<div class="stats-section">
+        <div class="stats-section-title">Pronunciation</div>
+        <div class="summary-score-wrap">
+            <div class="summary-score-circle ${circleCls}">${avg != null ? avg : '-'}</div>
+            <div class="summary-score-detail">
+                Average score<br>
+                <b>${st.turn_count ?? 0}</b> turns
+                ${st.max_score != null ? ` / best <b>${st.max_score}</b>` : ''}
+                ${st.min_score != null ? ` / lowest <b>${st.min_score}</b>` : ''}
+            </div>
+        </div>
+    </div>`;
+
+    // ---- 2. 間違い数とエラー種別チップ ----
+    html += `<div class="stats-section">`;
+    html += `<div class="stats-section-title">Corrections: ${st.correction_count ?? 0}</div>`;
+    const types = st.error_types || [];
+    if (types.length === 0) {
+        html += `<div class="stats-empty">間違いなし! すばらしい!</div>`;
+    } else {
+        html += `<div class="summary-chips">`;
+        types.forEach(t => {
+            const label = ERROR_TYPE_LABELS[t.error_type] || { ja: t.error_type, en: '' };
+            html += `<span class="summary-chip">${esc(label.ja)}<span class="cnt">${t.count}</span></span>`;
+        });
+        html += `</div>`;
+    }
+    html += `</div>`;
+
+    // ---- 3. 学んだ表現リスト（natural_expression・再生ボタン付き） ----
+    const expressions = st.natural_expressions || [];
+    html += `<div class="stats-section">`;
+    html += `<div class="stats-section-title">Expressions You Learned</div>`;
+    if (expressions.length === 0) {
+        html += `<div class="stats-empty">今回は新しい表現はありませんでした。</div>`;
+    } else {
+        expressions.forEach(ex => {
+            html += `<div class="summary-expression">
+                <span class="txt">${esc(ex)}</span>
+                <button class="summary-play-btn" onclick="speak('${escAttr(ex)}')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="11" height="11"><path d="M8 5v14l11-7z"/></svg>
+                    Play
+                </button>
+            </div>`;
+        });
+    }
+    html += `</div>`;
+
+    // ---- 4. LLM講評（feedbackがnullなら統計のみ表示） ----
+    if (fb) {
+        if ((fb.highlights || []).length > 0) {
+            html += `<div class="stats-section">`;
+            html += `<div class="stats-section-title">Highlights</div>`;
+            fb.highlights.forEach(h => {
+                html += `<div class="summary-feedback-item">${esc(h)}</div>`;
+            });
+            html += `</div>`;
+        }
+        if ((fb.focus_areas || []).length > 0) {
+            html += `<div class="stats-section">`;
+            html += `<div class="stats-section-title">Focus Next Time</div>`;
+            fb.focus_areas.forEach(f => {
+                html += `<div class="summary-feedback-item">${esc(f)}</div>`;
+            });
+            html += `</div>`;
+        }
+        if (fb.phrase_to_remember) {
+            html += `<div class="stats-section">`;
+            html += `<div class="stats-section-title">Phrase to Remember</div>`;
+            html += `<div class="summary-phrase">
+                <span class="txt">${esc(fb.phrase_to_remember)}</span>
+                <button class="summary-play-btn" onclick="speak('${escAttr(fb.phrase_to_remember)}')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="11" height="11"><path d="M8 5v14l11-7z"/></svg>
+                    Play
+                </button>
+            </div>`;
+            html += `</div>`;
+        }
+        if (fb.message) {
+            html += `<div class="stats-section">`;
+            html += `<div class="summary-message">${esc(fb.message)}</div>`;
+            html += `</div>`;
+        }
+    }
+
+    body.innerHTML = html;
 }
 
 // ============================================================

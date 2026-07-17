@@ -23,6 +23,9 @@ env/
 *.log
 *.tmp
 
+# SQLiteデータベース（会話履歴）
+tutor.db
+
 # OS/editor files
 .DS_Store
 Thumbs.db
