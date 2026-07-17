@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Shadow -->
+  <ellipse cx="60" cy="112" rx="22" ry="5" fill="#F3E8D8" opacity="0.5"/>
+
+  <!-- Left wing -->
+  <ellipse cx="35" cy="38" rx="16" ry="22" fill="white" stroke="#B4D8F0" stroke-width="1" opacity="0.85" transform="rotate(-15 35 38)"/>
+  <ellipse cx="35" cy="38" rx="10" ry="15" fill="#E8F4FD" opacity="0.4" transform="rotate(-15 35 38)"/>
+
+  <!-- Right wing -->
+  <ellipse cx="85" cy="38" rx="16" ry="22" fill="white" stroke="#B4D8F0" stroke-width="1" opacity="0.85" transform="rotate(15 85 38)"/>
+  <ellipse cx="85" cy="38" rx="10" ry="15" fill="#E8F4FD" opacity="0.4" transform="rotate(15 85 38)"/>
+
+  <!-- Body -->
+  <ellipse cx="60" cy="70" rx="24" ry="28" fill="#FFD54F"/>
+  <!-- Body highlight -->
+  <ellipse cx="55" cy="58" rx="12" ry="14" fill="#FFE082" opacity="0.6"/>
+
+  <!-- Stripes -->
+  <path d="M38 60 Q60 56 82 60 Q60 64 38 60Z" fill="#8D6E63" opacity="0.55"/>
+  <path d="M36 72 Q60 68 84 72 Q60 76 36 72Z" fill="#8D6E63" opacity="0.55"/>
+  <path d="M40 84 Q60 80 80 84 Q60 88 40 84Z" fill="#8D6E63" opacity="0.45"/>
+
+  <!-- Head -->
+  <circle cx="60" cy="36" r="22" fill="#FFD54F"/>
+  <!-- Head highlight -->
+  <circle cx="55" cy="30" r="10" fill="#FFE082" opacity="0.5"/>
+
+  <!-- Eyes - big cute style -->
+  <ellipse cx="50" cy="34" rx="6" ry="7" fill="white"/>
+  <ellipse cx="70" cy="34" rx="6" ry="7" fill="white"/>
+  <ellipse cx="51" cy="35" rx="4" ry="4.5" fill="#3E2723"/>
+  <ellipse cx="71" cy="35" rx="4" ry="4.5" fill="#3E2723"/>
+  <!-- Eye shine -->
+  <circle cx="53" cy="32.5" r="2" fill="white"/>
+  <circle cx="73" cy="32.5" r="2" fill="white"/>
+  <circle cx="49.5" cy="36" r="1" fill="white" opacity="0.7"/>
+  <circle cx="69.5" cy="36" r="1" fill="white" opacity="0.7"/>
+
+  <!-- Blush cheeks -->
+  <ellipse cx="40" cy="42" rx="6" ry="4" fill="#FFAB91" opacity="0.45"/>
+  <ellipse cx="80" cy="42" rx="6" ry="4" fill="#FFAB91" opacity="0.45"/>
+
+  <!-- Smile -->
+  <path d="M54 45 Q60 51 66 45" fill="none" stroke="#5D4037" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Antennae -->
+  <path d="M50 18 Q44 4 36 2" fill="none" stroke="#8D6E63" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M70 18 Q76 4 84 2" fill="none" stroke="#8D6E63" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Antenna balls - heart shaped -->
+  <circle cx="35" cy="2" r="4" fill="#FF8A80"/>
+  <circle cx="85" cy="2" r="4" fill="#FF8A80"/>
+
+  <!-- Tiny legs -->
+  <line x1="48" y1="94" x2="44" y2="102" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/>
+  <line x1="60" y1="96" x2="60" y2="104" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/>
+  <line x1="72" y1="94" x2="76" y2="102" stroke="#8D6E63" stroke-width="2" stroke-linecap="round"/>
+</svg>
