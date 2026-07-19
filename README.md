@@ -47,6 +47,18 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+## Fast Smoke Test
+
+You can verify the summary/report logic without Ollama, Whisper, a microphone,
+or API keys:
+
+```bash
+python test_summary.py
+```
+
+This test uses a temporary SQLite database and mocks the LLM response for the
+summary endpoint. It is the fastest check before trying the full speaking app.
+
 ## Configuration
 
 Copy the example environment file:
