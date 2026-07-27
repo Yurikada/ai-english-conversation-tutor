@@ -121,7 +121,7 @@ def get_sentence_ipa(sentence: str) -> list[dict]:
 
 
 # ============================================================
-# 発音スコアリング
+# 旧ASR確率ヒューリスティック（未使用。過去形式の参照用）
 # ============================================================
 # 単語レベル判定の閾値（faster-whisperの単語別認識確率に対する基準）
 WORD_LEVEL_GOOD_THRESHOLD = 0.85   # これ以上は good（明瞭に発音できている）
@@ -141,9 +141,9 @@ def score_word_level(probability: float) -> str:
     return "poor"
 
 
-def calculate_pronunciation_score_acoustic(words: list) -> Optional[dict]:
+def _legacy_calculate_pronunciation_score_acoustic(words: list) -> Optional[dict]:
     """
-    faster-whisperの単語別認識確率に基づく音響ベースの発音スコア。
+    旧形式のASR単語確率ヒューリスティック。現在のAPIからは呼ばれない。
     - 平均確率を主成分とする（平均prob 0.95 → 95点相当）
     - 低確率単語（poor/fair）の数に応じてペナルティを加える
     有効な単語情報が1つも無い場合は None を返し、呼び出し側でフォールバックする。
@@ -187,34 +187,32 @@ def calculate_pronunciation_score_acoustic(words: list) -> Optional[dict]:
         "word_count": len(word_scores),
         "unique_words": len({ws["word"].lower() for ws in word_scores}),
         "details": details,
-        "method": "acoustic",
+        "method": "legacy_asr_probability",
         "average_probability": round(avg_prob, 3),
         "word_scores": word_scores,
     }
 
 
-def calculate_pronunciation_score(
+def _legacy_calculate_pronunciation_score(
     recognized_text: str,
     expected_text: Optional[str] = None,
     words: Optional[list] = None,
 ) -> dict:
     """
-    発音スコアを算出する。
-    - words（faster-whisperの単語別確率）があれば音響ベース（method: "acoustic"）
-    - 無い場合（テキスト入力・OpenAI STT）は従来型の簡易スコア（method: "text_only"）
+    旧形式のテキストヒューリスティック。現在のAPIからは呼ばれない。
     """
     if not recognized_text.strip():
-        return {"overall_score": 0, "details": "音声が検出されませんでした", "method": "text_only"}
+        return {"overall_score": 0, "details": "音声が検出されませんでした", "method": "legacy_text_heuristic"}
 
     # 音響ベースのスコアリング（単語別確率がある場合）
-    acoustic = calculate_pronunciation_score_acoustic(words)
+    acoustic = _legacy_calculate_pronunciation_score_acoustic(words)
     if acoustic is not None:
         return acoustic
 
     text_words = re.findall(r"[a-zA-Z']+", recognized_text.lower())
 
     if not text_words:
-        return {"overall_score": 0, "details": "英語が検出されませんでした", "method": "text_only"}
+        return {"overall_score": 0, "details": "英語が検出されませんでした", "method": "legacy_text_heuristic"}
 
     # --- 従来型フォールバック: テキストのみの簡易スコア ---
     # 基本スコア（音声認識が成功した時点で60点以上）
@@ -235,13 +233,79 @@ def calculate_pronunciation_score(
         "word_count": len(text_words),
         "unique_words": len(set(text_words)),
         "details": "音声認識に成功しました（テキストのみの簡易評価）",
-        "method": "text_only",
+        "method": "legacy_text_heuristic",
     }
 
 
 # ============================================================
 # LLMクライアント
 # ============================================================
+def calculate_speech_recognition_confidence(words: Optional[list] = None) -> dict:
+    """Summarize ASR word probabilities without calling them pronunciation scores.
+
+    A speech recognizer's probability reflects confidence in its transcription.
+    It is not a measurement of phoneme accuracy, accent, rhythm, or intelligibility.
+    """
+    word_scores = []
+    probabilities = []
+    for entry in words or []:
+        if not isinstance(entry, dict):
+            continue
+        word = str(entry.get("word", "")).strip().strip(".,!?;:\"")
+        try:
+            probability = float(entry.get("probability"))
+        except (TypeError, ValueError):
+            continue
+        if not word or not 0.0 <= probability <= 1.0:
+            continue
+
+        if probability >= WORD_LEVEL_GOOD_THRESHOLD:
+            level = "high"
+        elif probability >= WORD_LEVEL_FAIR_THRESHOLD:
+            level = "medium"
+        else:
+            level = "low"
+        word_scores.append({
+            "word": word,
+            "score": round(probability * 100),
+            "level": level,
+        })
+        probabilities.append(probability)
+
+    if not probabilities:
+        return {
+            "overall_score": None,
+            "word_count": 0,
+            "details": "Speech-recognition confidence is unavailable for this input.",
+            "method": "unavailable",
+            "word_scores": [],
+        }
+
+    average = sum(probabilities) / len(probabilities)
+    return {
+        "overall_score": round(average * 100),
+        "word_count": len(word_scores),
+        "unique_words": len({item["word"].lower() for item in word_scores}),
+        "details": (
+            "Average ASR word probability. This is not a pronunciation-accuracy score."
+        ),
+        "method": "asr_word_probability",
+        "average_probability": round(average, 3),
+        "recognition_confidence": round(average * 100),
+        "word_scores": word_scores,
+    }
+
+
+def calculate_pronunciation_score(
+    recognized_text: str,
+    expected_text: Optional[str] = None,
+    words: Optional[list] = None,
+) -> dict:
+    """Backward-compatible API wrapper for speech-recognition confidence."""
+    del recognized_text, expected_text
+    return calculate_speech_recognition_confidence(words)
+
+
 async def call_ollama(messages: list[dict]) -> str:
     """Ollama API - tries /api/chat first, falls back to /api/generate"""
     import httpx
@@ -706,7 +770,7 @@ def _transcribe_audio_faster_whisper_file(audio_path: str) -> dict:
         beam_size=config.FASTER_WHISPER_BEAM_SIZE,
         vad_filter=config.FASTER_WHISPER_VAD_FILTER,
         condition_on_previous_text=False,
-        word_timestamps=True,  # 発音スコアリング用に単語別の確率・時刻を取得
+        word_timestamps=True,  # ASR認識信頼度の表示用に単語別の確率・時刻を取得
     )
 
     texts = []
@@ -714,7 +778,7 @@ def _transcribe_audio_faster_whisper_file(audio_path: str) -> dict:
     for segment in segments:
         if segment.text:
             texts.append(segment.text.strip())
-        # 単語別の認識確率を収集（発音スコアの主成分になる）
+        # 単語別のASR認識確率を収集
         for w in (segment.words or []):
             word = (w.word or "").strip()
             if not word:
@@ -956,7 +1020,7 @@ def build_session_summary_stats(data: dict) -> dict:
     turns = data.get("turns", [])
     corrections = data.get("corrections", [])
 
-    # 発音スコア（NULLは除外して集計）
+    # ASR認識信頼度（NULLは除外して集計）
     scores = [
         t["pronunciation_score"]
         for t in turns
@@ -1075,7 +1139,7 @@ async def chat(req: ChatRequest):
     - ユーザーの英語テキストを受け取る
     - LLMで添削・応答を生成
     - IPA発音記号を付与
-    - 発音スコアを算出
+    - ASR認識信頼度を算出（発音精度ではない）
     """
     user_text = req.text.strip()
     if not user_text:
@@ -1101,23 +1165,31 @@ async def chat(req: ChatRequest):
     user_ipa = get_sentence_ipa(user_text)
     reply_ipa = get_sentence_ipa(ai_response.get("reply", ""))
 
-    # 発音スコアを算出（単語別確率があれば音響ベース、無ければテキストのみ）
-    pronunciation_score = calculate_pronunciation_score(user_text, words=req.words)
-
-    # 認識信頼度があれば反映（音響ベースのスコアには適用しない）
-    if req.confidence > 0 and pronunciation_score.get("method") != "acoustic":
-        confidence_factor = req.confidence * 100
-        pronunciation_score["overall_score"] = round(
-            pronunciation_score["overall_score"] * 0.5 + confidence_factor * 0.5
-        )
-        pronunciation_score["recognition_confidence"] = round(req.confidence * 100)
+    # APIキーは後方互換のため維持するが、値は発音精度ではなくASRの認識信頼度。
+    pronunciation_score = calculate_speech_recognition_confidence(req.words)
+    if (
+        pronunciation_score["method"] == "unavailable"
+        and 0 < req.confidence <= 1
+    ):
+        browser_confidence = round(req.confidence * 100)
+        pronunciation_score = {
+            "overall_score": browser_confidence,
+            "word_count": len(re.findall(r"[a-zA-Z']+", user_text)),
+            "details": (
+                "Browser speech-recognition confidence. "
+                "This is not a pronunciation-accuracy score."
+            ),
+            "method": "browser_asr_confidence",
+            "recognition_confidence": browser_confidence,
+            "word_scores": [],
+        }
 
     # 会話ターンをDBに保存（履歴・添削・スコアの永続化）
     db.save_turn(
         req.session_id,
         user_text,
         ai_response,
-        pronunciation_score.get("overall_score", 0),
+        pronunciation_score.get("overall_score"),
     )
 
     return JSONResponse({
@@ -1249,7 +1321,7 @@ async def get_stats():
     """弱点ダッシュボード用の統計を返す
     - total_corrections / total_turns / avg_score
     - error_stats: エラー種別ごとの件数と直近の例文（件数降順）
-    - recent_scores: 直近の発音スコア推移（古い順）
+    - recent_scores: 直近のASR認識信頼度推移（古い順）
     """
     overview = db.get_dashboard_stats()
     return JSONResponse({

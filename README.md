@@ -1,6 +1,6 @@
 # AI English Conversation Tutor
 
-AI English Conversation Tutor is a local-first English speaking practice app built with FastAPI and a static browser UI. It supports grammar correction, short conversation replies, IPA pronunciation hints, and speech transcription.
+AI English Conversation Tutor is an English speaking practice app built with FastAPI and a static browser UI. It supports grammar correction, short conversation replies, IPA pronunciation hints, and speech transcription. Local LLM and STT providers are available; the default edge-tts voice requires a network connection.
 
 The default setup uses local providers where possible:
 
@@ -14,15 +14,18 @@ The default setup uses local providers where possible:
 - Strict grammar correction with JSON-structured feedback
 - Natural expression suggestions
 - IPA pronunciation support
-- Pronunciation scoring based on recognized English text
+- Speech-recognition confidence indicator (not a pronunciation-accuracy score)
 - Local Ollama support for private LLM inference
 - Local faster-whisper support for speech-to-text
-- Server-side text-to-speech with edge-tts (natural neural voices), with OpenAI TTS and browser speech synthesis as alternatives
+- Server-side text-to-speech with edge-tts (network required), with OpenAI TTS and browser speech synthesis as alternatives
 - Optional OpenAI and Anthropic provider support
 
 ## Safety
 
 API keys are not stored in source code. Configure secrets through environment variables or a local `.env` file.
+
+The recognition-confidence indicator reports ASR model probabilities only. It
+does not assess phoneme accuracy, accent, stress, rhythm, or intelligibility.
 
 Never commit:
 

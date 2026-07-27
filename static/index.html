@@ -405,7 +405,7 @@
             font-size: 10px; color: var(--text-secondary);
             text-align: right; margin-top: 2px;
         }
-        /* 発音スコア推移（CSSバー） */
+        /* ASR認識信頼度の推移（CSSバー） */
         .score-trend {
             display: flex; align-items: flex-end; gap: 4px;
             height: 76px; padding-top: 4px;
@@ -969,32 +969,27 @@ function renderTurn(userText, data, recordingUrl) {
     html += `<div class="section-label user-label">YOU</div>`;
     html += `<div class="user-text">${esc(userText)}</div>`;
 
-    // IPA: correct pronunciation guide
-    // 単語別スコアがあれば good/fair/poor で色分け、無ければ従来表示
-    const wordScores = data.pronunciation_score && data.pronunciation_score.word_scores;
+    // IPA reference guide
+    // 単語別ASR信頼度があれば high/medium/low で色分け
     if (data.user_ipa && data.user_ipa.length > 0) {
-        if (wordScores && wordScores.length > 0) {
-            html += renderIPAScoredRow('Your Pronunciation (IPA)', data.user_ipa, wordScores);
-        } else {
-            html += renderIPARow('Correct Pronunciation (IPA)', data.user_ipa, 'correct');
-        }
+        html += renderIPARow('IPA Reference', data.user_ipa, 'correct');
     }
 
     // Score
-    if (data.pronunciation_score) {
+    if (data.pronunciation_score && Number.isFinite(data.pronunciation_score.overall_score)) {
         const s = data.pronunciation_score.overall_score;
         const cls = s >= 85 ? 'score-high' : s >= 70 ? 'score-mid' : 'score-low';
-        // スコア算出方法の説明（acoustic: 音響ベース / text_only: テキストのみ）
+        // ASR信頼度の出所
         const method = data.pronunciation_score.method;
-        const methodLabel = method === 'acoustic'
-            ? 'acoustic: 音響ベース評価（単語ごとの認識確率から算出）'
-            : method === 'text_only'
-                ? 'text_only: テキストのみの簡易評価'
+        const methodLabel = method === 'asr_word_probability'
+            ? 'ASRの単語別認識確率の平均（発音精度ではありません）'
+            : method === 'browser_asr_confidence'
+                ? 'ブラウザASRの認識信頼度（発音精度ではありません）'
                 : '';
         html += `<div class="score-row">
             <div class="score-circle ${cls}">${s}</div>
             <div class="score-detail">
-                Pronunciation Score<br>
+                Speech Recognition Confidence<br>
                 ${data.pronunciation_score.word_count || 0} words recognized
                 ${data.pronunciation_score.recognition_confidence
                     ? ` / Recognition confidence: ${data.pronunciation_score.recognition_confidence}%` : ''}
@@ -1102,12 +1097,12 @@ function renderIPARow(label, ipaData, style) {
 
 // 単語別スコアのレベルをIPA表示用のCSSクラスへ変換
 function levelToIpaClass(level) {
-    if (level === 'good') return 'ipa-correct';
-    if (level === 'poor') return 'ipa-wrong';
-    return 'ipa-neutral';  // fair・不明はニュートラル表示
+    if (level === 'high') return 'ipa-correct';
+    if (level === 'low') return 'ipa-wrong';
+    return 'ipa-neutral';  // medium・不明はニュートラル表示
 }
 
-// 単語別スコア（word_scores）つきのIPA行を描画する
+// 単語別ASR信頼度（word_scores）つきのIPA行を描画する
 // user_ipaの単語列とword_scoresの単語列を正規化して順番にマッチングする
 function renderIPAScoredRow(label, ipaData, wordScores) {
     const norm = s => (s || '').toLowerCase().replace(/[^a-z']/g, '');
@@ -1127,7 +1122,7 @@ function renderIPAScoredRow(label, ipaData, wordScores) {
             if (found >= 0) {
                 const ws = wordScores[found];
                 cls = levelToIpaClass(ws.level);
-                titleAttr = ` title="score: ${ws.score} (${esc(ws.level)})"`;
+                titleAttr = ` title="ASR confidence: ${ws.score} (${esc(ws.level)})"`;
                 cursor = found + 1;
             }
             return `<span class="ipa-unit"${titleAttr}>
@@ -1376,9 +1371,9 @@ function renderStats(data) {
     }
     html += `</div>`;
 
-    // ---- 3. 発音スコア推移（CSSバー・古い順→新しい順） ----
+    // ---- 3. ASR認識信頼度の推移（CSSバー・古い順→新しい順） ----
     html += `<div class="stats-section">`;
-    html += `<div class="stats-section-title">Pronunciation Score Trend</div>`;
+    html += `<div class="stats-section-title">Speech Recognition Confidence Trend</div>`;
     const scores = data.recent_scores || [];
     if (scores.length === 0) {
         html += `<div class="stats-empty">まだスコアデータがありません。</div>`;
@@ -1609,7 +1604,7 @@ function renderSummary(data) {
     const avg = st.avg_score;
     const circleCls = avg == null ? 'score-mid' : avg >= 85 ? 'score-high' : avg >= 70 ? 'score-mid' : 'score-low';
     html += `<div class="stats-section">
-        <div class="stats-section-title">Pronunciation</div>
+        <div class="stats-section-title">Speech Recognition Confidence</div>
         <div class="summary-score-wrap">
             <div class="summary-score-circle ${circleCls}">${avg != null ? avg : '-'}</div>
             <div class="summary-score-detail">

@@ -8,6 +8,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 
 try:
     # 通常はconfig.pyのBASE_DIRを使用
@@ -61,7 +62,8 @@ def init_db() -> None:
                 reply TEXT NOT NULL,
                 natural_expression TEXT,
                 encouragement TEXT,
-                pronunciation_score INTEGER
+                pronunciation_score INTEGER,
+                recognition_confidence INTEGER
             );
 
             CREATE TABLE IF NOT EXISTS corrections (
@@ -83,6 +85,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE corrections ADD COLUMN error_type TEXT")
         except sqlite3.OperationalError:
             pass
+        try:
+            conn.execute("ALTER TABLE turns ADD COLUMN recognition_confidence INTEGER")
+        except sqlite3.OperationalError:
+            pass
 
         # 既存DB互換: 復習モード（簡易SRS）用のカラムをALTERで追加する
         # 既に存在する場合は duplicate column エラーになるので個別に握りつぶす
@@ -98,7 +104,7 @@ def init_db() -> None:
                 pass
 
 
-def save_turn(session_id: str, user_text: str, ai_response: dict, score: int) -> int:
+def save_turn(session_id: str, user_text: str, ai_response: dict, score: Optional[int]) -> int:
     """
     1ターン分の会話をDBに保存する。
     - セッションが未登録なら作成
@@ -117,7 +123,7 @@ def save_turn(session_id: str, user_text: str, ai_response: dict, score: int) ->
             """
             INSERT INTO turns
                 (session_id, created_at, user_text, reply,
-                 natural_expression, encouragement, pronunciation_score)
+                 natural_expression, encouragement, recognition_confidence)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
@@ -188,7 +194,9 @@ def get_session_summary_data(session_id: str) -> dict | None:
     with get_connection() as conn:
         turn_rows = conn.execute(
             """
-            SELECT user_text, reply, pronunciation_score, natural_expression
+            SELECT user_text, reply,
+                   recognition_confidence AS pronunciation_score,
+                   natural_expression
             FROM turns
             WHERE session_id = ?
             ORDER BY id ASC
@@ -242,7 +250,7 @@ def get_recent_sessions(limit: int = 20) -> list[dict]:
                 s.id,
                 s.created_at,
                 COUNT(t.id) AS turn_count,
-                ROUND(AVG(t.pronunciation_score)) AS avg_score,
+                ROUND(AVG(t.recognition_confidence)) AS avg_score,
                 MAX(t.created_at) AS last_active
             FROM sessions s
             LEFT JOIN turns t ON t.session_id = s.id
@@ -364,15 +372,15 @@ def get_dashboard_stats(score_limit: int = 20) -> dict:
             "SELECT COUNT(*) AS n FROM corrections"
         ).fetchone()["n"]
         avg_row = conn.execute(
-            "SELECT ROUND(AVG(pronunciation_score), 1) AS avg FROM turns "
-            "WHERE pronunciation_score IS NOT NULL"
+            "SELECT ROUND(AVG(recognition_confidence), 1) AS avg FROM turns "
+            "WHERE recognition_confidence IS NOT NULL"
         ).fetchone()
         # 直近スコアを新しい順で取り、表示用に古い順へ戻す
         score_rows = conn.execute(
             """
-            SELECT pronunciation_score AS score, created_at
+            SELECT recognition_confidence AS score, created_at
             FROM turns
-            WHERE pronunciation_score IS NOT NULL
+            WHERE recognition_confidence IS NOT NULL
             ORDER BY id DESC
             LIMIT ?
             """,
