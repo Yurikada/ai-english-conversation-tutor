@@ -2,6 +2,8 @@
 
 AI English Conversation Tutor is an English speaking practice app built with FastAPI and a static browser UI. It supports grammar correction, short conversation replies, IPA pronunciation hints, and speech transcription. Local LLM and STT providers are available; the default edge-tts voice requires a network connection.
 
+![English Bee conversation practice UI](docs/assets/ai-english-conversation-tutor-overview.png)
+
 The default setup uses local providers where possible:
 
 - LLM: Ollama
