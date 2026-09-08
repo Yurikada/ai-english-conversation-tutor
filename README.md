@@ -1,5 +1,9 @@
 # AI English Conversation Tutor
 
+英会話の音声入力・文法フィードバック・読み上げをまとめた個人向け学習アプリです。Ollamaとfaster-whisperによるローカル処理に対応し、既定のedge-tts読み上げは通信を使います。
+
+**最初の確認:** [Fast Smoke Test](#fast-smoke-test) はAPIキー・マイク・モデル起動なしで、要約ロジックを確認できます。音声認識の信頼度表示は発音の正確さを採点するものではありません。
+
 AI English Conversation Tutor is an English speaking practice app built with FastAPI and a static browser UI. It supports grammar correction, short conversation replies, IPA pronunciation hints, and speech transcription. Local LLM and STT providers are available; the default edge-tts voice requires a network connection.
 
 ![English Bee conversation practice UI](docs/assets/ai-english-conversation-tutor-overview.png)
