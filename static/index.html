@@ -689,6 +689,13 @@
 // ============================================================
 // State
 // ============================================================
+let audioContext = null;
+let analyserNode = null;
+let silenceTimer = null;
+let hasStartedSpeaking = false;
+let animationFrameId = null;
+let conversationActive = false;
+
 let isRecording = false;
 let isProcessing = false;
 let isTranscribing = false;
@@ -708,6 +715,10 @@ const recognitionPreview = document.getElementById('recognitionPreview');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const listeningModeBtn = document.getElementById('listeningModeBtn');
+
+// Adjust these to tune sensitivity:
+const SILENCE_THRESHOLD = 0.015;    // Lower = more sensitive to soft sounds, Higher = needs louder speech
+const SILENCE_DURATION_MS = 1200;   // How long of a pause (in ms) before auto-submitting (e.g., 1.4 seconds)
 
 textInput.addEventListener('input', () => {
     sendBtn.disabled = textInput.value.trim() === '';
@@ -783,20 +794,50 @@ function getAudioExtension(mimeType) {
     return mapping[normalized] || '.webm';
 }
 
-function cleanupRecordingResources(stream = recordingStream, recorder = mediaRecorder) {
-    if (stream) stream.getTracks().forEach(track => track.stop());
+function cleanupRecordingResources(
+    stream = recordingStream,
+    recorder = mediaRecorder
+) {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+
     if (recordingStream === stream) recordingStream = null;
     if (mediaRecorder === recorder) mediaRecorder = null;
+
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+
+    if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(console.error);
+    }
+
+    audioContext = null;
+    analyserNode = null;
+
+    if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+    }
+
+    hasStartedSpeaking = false;
 }
+
 
 async function startRecording() {
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-        setRecognitionPreview('This browser cannot record audio. Please type instead.', true);
+        setRecognitionPreview(
+            'Browser does not support microphone recording.',
+            true
+        );
         return;
     }
 
     try {
-        setRecognitionPreview('Requesting microphone access...', true);
+        console.log('[Audio] Requesting microphone permission...');
+
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
                 echoCancellation: true,
@@ -804,7 +845,11 @@ async function startRecording() {
                 autoGainControl: true
             }
         });
+
+        console.log('[Audio] Microphone permission granted.');
+
         const mimeType = getPreferredAudioMimeType();
+
         const recorder = mimeType
             ? new MediaRecorder(stream, { mimeType })
             : new MediaRecorder(stream);
@@ -812,48 +857,156 @@ async function startRecording() {
         recordingStream = stream;
         mediaRecorder = recorder;
         audioChunks = [];
+        hasStartedSpeaking = false;
 
-        recorder.ondataavailable = (e) => {
-            if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        // Initialize audio monitoring
+        const AudioContextClass =
+            window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+            throw new Error('Web Audio API is not supported.');
+        }
+
+        audioContext = new AudioContextClass();
+
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
+        const source = audioContext.createMediaStreamSource(stream);
+
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 512;
+
+        source.connect(analyserNode);
+
+        console.log('[Audio] Audio analyser initialized.');
+
+        // Receive recorded audio
+        recorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
         };
 
-        recorder.onerror = (e) => {
-            console.error('Recording error:', e);
+        recorder.onerror = (event) => {
+            console.error('[Audio] Recorder error:', event);
+
             isRecording = false;
             micBtn.classList.remove('recording');
+
             cleanupRecordingResources(stream, recorder);
-            setRecognitionPreview('Recording failed. Please try again.', true);
+
+            setRecognitionPreview('Recording failed.', true);
         };
 
         recorder.onstop = async () => {
-            const blobType = recorder.mimeType || audioChunks[0]?.type || mimeType || 'audio/webm';
+            const blobType =
+                recorder.mimeType ||
+                audioChunks[0]?.type ||
+                mimeType ||
+                'audio/webm';
+
             const blob = new Blob(audioChunks, { type: blobType });
+
             audioChunks = [];
+
             cleanupRecordingResources(stream, recorder);
 
+            console.log('[Audio] Recording stopped. Size:', blob.size);
+
             if (!blob.size) {
-                setRecognitionPreview('No audio detected. Try again.', true);
+                setRecognitionPreview('No audio detected.', true);
                 return;
             }
 
-            if (lastRecordingUrl) URL.revokeObjectURL(lastRecordingUrl);
+            if (lastRecordingUrl) {
+                URL.revokeObjectURL(lastRecordingUrl);
+            }
+
             lastRecordingUrl = URL.createObjectURL(blob);
-            await transcribeAndSend(blob);
+
+            try {
+                await transcribeAndSend(blob);
+            } catch (error) {
+                console.error('[Audio] Transcription failed:', error);
+                setRecognitionPreview('Could not process audio.', true);
+            }
         };
 
         recorder.start();
+
         isRecording = true;
+
         micBtn.classList.add('recording');
-        setRecognitionPreview('Recording... tap the mic again to finish.', true);
-    } catch (e) {
-        console.error('Microphone start failed:', e);
+
+        setRecognitionPreview('Listening... Speak naturally.', true);
+
+        console.log('[Audio] Recording started.');
+
+        // Start monitoring AFTER recording starts
+        monitorAudioVolume();
+
+    } catch (error) {
+        console.error('[Audio] Start failed:', error);
+
         isRecording = false;
         micBtn.classList.remove('recording');
+
         cleanupRecordingResources();
-        const msg = e && e.name === 'NotAllowedError'
-            ? 'Microphone blocked. Check browser permissions.'
-            : 'Could not start recording. Please try again.';
-        setRecognitionPreview(msg, true);
+
+        const message = error.name === 'NotAllowedError'
+            ? 'Microphone permission denied.'
+            : error.message || 'Could not start recording.';
+
+        setRecognitionPreview(message, true);
+    }
+}
+
+// Real-time volume checking loop to trigger auto-stop on silence
+
+function monitorAudioVolume() {
+    if (!isRecording || !analyserNode) return;
+
+    const bufferLength = analyserNode.fftSize;
+    const dataArray = new Uint8Array(bufferLength);
+
+    analyserNode.getByteTimeDomainData(dataArray);
+
+    let sum = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+        const value = (dataArray[i] - 128) / 128;
+        sum += value * value;
+    }
+
+    const volume = Math.sqrt(sum / bufferLength);
+
+    if (volume > SILENCE_THRESHOLD) {
+
+        if (!hasStartedSpeaking) {
+            hasStartedSpeaking = true;
+            console.log('[VAD] Speech detected');
+            setRecognitionPreview('Listening to your speech...', true);
+        }
+
+        if (silenceTimer) {
+            clearTimeout(silenceTimer);
+            silenceTimer = null;
+        }
+
+    } else if (hasStartedSpeaking && !silenceTimer) {
+
+        silenceTimer = setTimeout(() => {
+            if (isRecording) {
+                console.log('[VAD] Silence detected. Submitting audio...');
+                stopRecording();
+            }
+        }, SILENCE_DURATION_MS);
+    }
+
+    if (isRecording) {
+        animationFrameId = requestAnimationFrame(monitorAudioVolume);
     }
 }
 
