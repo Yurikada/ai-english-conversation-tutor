@@ -718,7 +718,7 @@ const listeningModeBtn = document.getElementById('listeningModeBtn');
 
 // Adjust these to tune sensitivity:
 const SILENCE_THRESHOLD = 0.015;    // Lower = more sensitive to soft sounds, Higher = needs louder speech
-const SILENCE_DURATION_MS = 1200;   // How long of a pause (in ms) before auto-submitting (e.g., 1.4 seconds)
+const SILENCE_DURATION_MS = 1500;   // How long of a pause (in ms) before auto-submitting (e.g., 1.4 seconds)
 
 textInput.addEventListener('input', () => {
     sendBtn.disabled = textInput.value.trim() === '';
