@@ -1198,6 +1198,11 @@ function renderTurn(userText, data, recordingUrl) {
             Play
         </button>`;
         html += `</div></div>`;
+
+            // Automatically speak when the section appears
+        setTimeout(() => {
+            speak(data.natural_expression);
+        }, 300);
     }
 
     // ---- 4. AI reply ----
