@@ -309,10 +309,10 @@ def calculate_pronunciation_score(
 async def call_ollama(messages: list[dict]) -> str:
     """Ollama API - tries /api/chat first, falls back to /api/generate"""
     import httpx
-    headers = {
-        "ngrok-skip-browser-warning": "true"
-        }
-    async with httpx.AsyncClient(timeout=120.0 , headers= headers) as client:
+    # headers = {
+    #     "ngrok-skip-browser-warning": "true"
+    #     }
+    async with httpx.AsyncClient(timeout=120.0 ) as client:
         # --- Try /api/chat (Ollama >= 0.1.14) ---
         try:
             chat_payload = {
